@@ -5,96 +5,103 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace HuffmanCompress {
+namespace HuffmanCompress
+{
     public class FileController {
-        public void Comprimir(IFormFile file, string routeDirectory) {
+
+        public void CompressFile(IFormFile file, string routeDirectory) {
+
+            var dataTable = new Dictionary<byte, double>();
+            var treeList = new List<Node>();
+            double totalCharacters = 0;
 
             if (!Directory.Exists(Path.Combine(routeDirectory, "compress"))) {
                 Directory.CreateDirectory(Path.Combine(routeDirectory, "compress"));
             }
-
-            var TablaLetras = new Dictionary<byte, double>();
-            var ListaNodosArbol = new List<Node>();
 
             using (var reader = new BinaryReader(file.OpenReadStream())) {
                 const int bufferLength = 10000;
                 var byteBuffer = new byte[bufferLength];
                 while (reader.BaseStream.Position != reader.BaseStream.Length) {
                     byteBuffer = reader.ReadBytes(bufferLength);
-                    foreach (var letra in byteBuffer) {
-                        if (TablaLetras.ContainsKey(letra)) {
-                            TablaLetras[letra]++;
+                    foreach (var words in byteBuffer) {
+                        if (dataTable.ContainsKey(words)) {
+                            dataTable[words]++;
                         } else {
-                            TablaLetras.Add(letra, 1);
+                            dataTable.Add(words, 1);
                         }
                     }
                 }
 
-                double totalLetras = 0;
-
-                foreach (var letra in TablaLetras) {
-                    totalLetras += letra.Value;
+                foreach (var words in dataTable) {
+                    totalCharacters += words.Value;
                 }
 
-                foreach (var letra in TablaLetras) {
-                    ListaNodosArbol.Add(new Node { caracter = letra.Key, Frecuencia = letra.Value / totalLetras });
+                foreach (var words in dataTable) {
+                    treeList.Add(new Node { character = words.Key, frecuency = words.Value / totalCharacters });
                 }
-                ListaNodosArbol.Sort();
+                treeList.Sort();
             }
 
-            Insert(ListaNodosArbol, file, routeDirectory);
+            InsertElement(treeList, file, routeDirectory);
         }
 
-        public static void Insert(List<Node> ListaNodo, IFormFile file, string routeDirectory) {
-            while (ListaNodo.Count != 1) {
-                var nodoAux = new Node();
-                nodoAux.Frecuencia = ListaNodo[0].Frecuencia + ListaNodo[1].Frecuencia;
-                nodoAux.nodoizq = ListaNodo[1];
-                nodoAux.nododer = ListaNodo[0];
+        public static void InsertElement(List<Node> nodeList, IFormFile file, string routeDirectory) {
 
-                ListaNodo.RemoveRange(0, 2);
-                ListaNodo.Add(nodoAux);
-                ListaNodo.Sort();
+            var prefixDictionary = new Dictionary<byte, string>();
+            var road = "";
+
+            while (nodeList.Count != 1) {
+                var nodeAux = new Node();
+                nodeAux.frecuency = nodeList[0].frecuency + nodeList[1].frecuency;
+                nodeAux.nodeLeft = nodeList[1];
+                nodeAux.nodeRight = nodeList[0];
+
+                nodeList.RemoveRange(0, 2);
+                nodeList.Add(nodeAux);
+                nodeList.Sort();
             }
 
-            var DiccionarioPrefijos = new Dictionary<byte, string>();
-            var camino = "";
-            Recorrido(ref DiccionarioPrefijos, ListaNodo[0], camino);
-            ComprimirArchivo(DiccionarioPrefijos, file, routeDirectory);
+            TravelFile(ref prefixDictionary, nodeList[0], road);
+            CompressInFile(prefixDictionary, file, routeDirectory);
         }
 
-        public static void Recorrido(ref Dictionary<byte, string> DiccionarioPre, Node raiz, string camino) {
-            if (raiz != null) {
-                var caminoDer = $"{ camino }1";
-                Recorrido(ref DiccionarioPre, raiz.nododer, caminoDer);
-                if (raiz.caracter != 0) {
-                    DiccionarioPre.Add(raiz.caracter, camino);
-                }
-                var caminoIzq = $"{camino}0";
-                Recorrido(ref DiccionarioPre, raiz.nodoizq, caminoIzq);
+        public static void TravelFile(ref Dictionary<byte, string> prefixDictionary, Node root, string road) {
+
+            if (root != null) {
+                var caminoDer = $"{ road }1";
+                var caminoIzq = $"{road}0";
+                
+                TravelFile(ref prefixDictionary, root.nodeRight, caminoDer);
+
+                if (root.character != 0) {
+                    prefixDictionary.Add(root.character, road);
+                } 
+                TravelFile(ref prefixDictionary, root.nodeLeft, caminoIzq);
             }
         }
         
-        public static void ComprimirArchivo(Dictionary<byte, string> DiccionarioClave, IFormFile file, string routeDirectory) {
+        public static void CompressInFile(Dictionary<byte, string> keyDictionary, IFormFile file, string routeDirectory) {
+
+            const int bufferLength = 10000;
+
+            var byteBuffer = new byte[bufferLength];
+            var cadenaAux = "";
+
             using (var reader = new BinaryReader(file.OpenReadStream())) {
                 using (var streamWriter = new FileStream(Path.Combine(routeDirectory, "compress", $"{Path.GetFileNameWithoutExtension(file.FileName)}.huff"), FileMode.OpenOrCreate)) {
                     using (var writer = new BinaryWriter(streamWriter)) {
-                        writer.Write(Encoding.UTF8.GetBytes(Convert.ToString(DiccionarioClave.Count).PadLeft(8, '0').ToCharArray()));
-                        foreach(var item in DiccionarioClave) {
+                        writer.Write(Encoding.UTF8.GetBytes(Convert.ToString(keyDictionary.Count).PadLeft(8, '0').ToCharArray()));
+                        foreach(var item in keyDictionary) {
                             writer.Write(item.Key); 
                             var aux = $"{item.Value}|";
                             writer.Write(aux.ToCharArray());
                         }
 
-                        const int bufferLength = 10000;
-
-                        var byteBuffer = new byte[bufferLength];
-                        var cadenaAux = "";
-
                         while(reader.BaseStream.Position != reader.BaseStream.Length){
                             byteBuffer = reader.ReadBytes(bufferLength);
                             foreach (var letraRecibida in byteBuffer) {
-                                foreach (var clave in DiccionarioClave) {
+                                foreach (var clave in keyDictionary) {
                                     if (letraRecibida == clave.Key) {
                                         cadenaAux += clave.Value;
                                         if ((cadenaAux.Length / 8) != 0) {
@@ -118,7 +125,7 @@ namespace HuffmanCompress {
             }
         }
 
-        public  string Descomprimir (IFormFile file, string routeDirectory) {
+        public  string DecompressFile (IFormFile file, string routeDirectory) {
 
             var TablaPrefijos = new Dictionary<string, byte>();
             var Extension = string.Empty;
@@ -159,7 +166,7 @@ namespace HuffmanCompress {
                         var Linea = string.Empty;
                         while (reader.BaseStream.Position != reader.BaseStream.Length) {
                             foreach (var item in byteBuffer) {
-                                Linea += ObtenerBinario(Convert.ToString(item)).PadLeft(8, '0');
+                                Linea += GetBinary(Convert.ToString(item)).PadLeft(8, '0');
                                 while (Linea.Length > 0) {
                                     if (TablaPrefijos.ContainsKey(auxCadena)) {
                                         writer.Write(TablaPrefijos[auxCadena]);
@@ -175,7 +182,7 @@ namespace HuffmanCompress {
 
                         if (auxCadena.Length != 0) {
                             foreach (var item in byteBuffer) {
-                                Linea += ObtenerBinario(Convert.ToString(item)).PadLeft(8, '0');
+                                Linea += GetBinary(Convert.ToString(item)).PadLeft(8, '0');
                                 while (Linea.Length > 0) {
                                     if (TablaPrefijos.ContainsKey(auxCadena)) {
                                         writer.Write(TablaPrefijos[auxCadena]);
@@ -195,7 +202,7 @@ namespace HuffmanCompress {
         }
 
 
-        private static string ObtenerBinario (string snumero) {
+        private static string GetBinary (string snumero) {
             var numero = Convert.ToInt32(snumero);
             var aux = "";
             var binario = "";

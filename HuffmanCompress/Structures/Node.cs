@@ -1,16 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace HuffmanCompress.Controller {
+namespace HuffmanCompress.Controller { 
+
     public class Node : IComparable {
-        public byte caracter { get; set; }
-        public double Frecuencia { get; set; }
-        public Node nodoizq { get; set; }
-        public Node nododer { get; set; }
+
+        public byte character { get; set; }
+        public double frecuency { get; set; }
+        public Node nodeLeft { get; set; }
+        public Node nodeRight { get; set; }
 
         public int CompareTo(object obj) {
-            return Frecuencia.CompareTo(((Node)obj).Frecuencia);
+            return frecuency.CompareTo(((Node)obj).frecuency);
         }
     }
 }
