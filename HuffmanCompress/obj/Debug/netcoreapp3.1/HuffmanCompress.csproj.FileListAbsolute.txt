@@ -1,0 +1,9 @@
+C:\Users\victo\source\repos\APIHuffman\HuffmanCompress\bin\Debug\netcoreapp3.1\HuffmanCompress.deps.json
+C:\Users\victo\source\repos\APIHuffman\HuffmanCompress\bin\Debug\netcoreapp3.1\HuffmanCompress.dll
+C:\Users\victo\source\repos\APIHuffman\HuffmanCompress\bin\Debug\netcoreapp3.1\HuffmanCompress.pdb
+C:\Users\victo\source\repos\APIHuffman\HuffmanCompress\obj\Debug\netcoreapp3.1\HuffmanCompress.csprojAssemblyReference.cache
+C:\Users\victo\source\repos\APIHuffman\HuffmanCompress\obj\Debug\netcoreapp3.1\HuffmanCompress.AssemblyInfoInputs.cache
+C:\Users\victo\source\repos\APIHuffman\HuffmanCompress\obj\Debug\netcoreapp3.1\HuffmanCompress.AssemblyInfo.cs
+C:\Users\victo\source\repos\APIHuffman\HuffmanCompress\obj\Debug\netcoreapp3.1\HuffmanCompress.dll
+C:\Users\victo\source\repos\APIHuffman\HuffmanCompress\obj\Debug\netcoreapp3.1\HuffmanCompress.pdb
+C:\Users\victo\source\repos\APIHuffman\HuffmanCompress\obj\Debug\netcoreapp3.1\HuffmanCompress.csproj.CoreCompileInputs.cache
