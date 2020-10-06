@@ -1,4 +1,5 @@
 ﻿using HuffmanCompress.Controller;
+using HuffmanCompress.Interfaces;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -7,43 +8,11 @@ using System.Text;
 
 namespace HuffmanCompress
 {
-    public class FileController {
+    public class FileController : ICompressor {
 
         public void CompressFile(IFormFile file, string routeDirectory) {
-
-            var dataTable = new Dictionary<byte, double>();
-            var treeList = new List<Node>();
-            double totalCharacters = 0;
-
-            if (!Directory.Exists(Path.Combine(routeDirectory, "compress"))) {
-                Directory.CreateDirectory(Path.Combine(routeDirectory, "compress"));
-            }
-
-            using (var reader = new BinaryReader(file.OpenReadStream())) {
-                const int bufferLength = 10000;
-                var byteBuffer = new byte[bufferLength];
-                while (reader.BaseStream.Position != reader.BaseStream.Length) {
-                    byteBuffer = reader.ReadBytes(bufferLength);
-                    foreach (var words in byteBuffer) {
-                        if (dataTable.ContainsKey(words)) {
-                            dataTable[words]++;
-                        } else {
-                            dataTable.Add(words, 1);
-                        }
-                    }
-                }
-
-                foreach (var words in dataTable) {
-                    totalCharacters += words.Value;
-                }
-
-                foreach (var words in dataTable) {
-                    treeList.Add(new Node { character = words.Key, frecuency = words.Value / totalCharacters });
-                }
-                treeList.Sort();
-            }
-
-            InsertElement(treeList, file, routeDirectory);
+            Compress(file, routeDirectory);
+            
         }
 
         public static void InsertElement(List<Node> nodeList, IFormFile file, string routeDirectory) {
@@ -126,79 +95,8 @@ namespace HuffmanCompress
         }
 
         public  string DecompressFile (IFormFile file, string routeDirectory) {
-
-            var TablaPrefijos = new Dictionary<string, byte>();
-            var Extension = string.Empty;
-
-            if (!Directory.Exists(Path.Combine(routeDirectory, "decompress"))) {
-                Directory.CreateDirectory(Path.Combine(routeDirectory, "decompress"));
-            }
-
-            using (var reader = new BinaryReader(file.OpenReadStream())) {
-                using (var streamWriter = new FileStream(Path.Combine(routeDirectory, "decompress", $"{Path.GetFileNameWithoutExtension(file.FileName)}.txt"), FileMode.OpenOrCreate)) {
-                    using (var writer = new BinaryWriter(streamWriter)) {
-                        int bufferLength = 10000;
-                        var byteBuffer = new byte[bufferLength];
-                        byteBuffer = reader.ReadBytes(8);
-                        var cantDiccionario = Convert.ToInt32(Encoding.UTF8.GetString(byteBuffer));
-
-                        bufferLength = 1;
-                        byteBuffer = reader.ReadBytes(bufferLength);
-
-                        for (int i = 0; i < cantDiccionario; i++) {
-                            var camino = new List<byte>();
-                            var letra = byteBuffer[0];
-                            byteBuffer = reader.ReadBytes(bufferLength);
-                            var DentroCamino = true;
-                            while (DentroCamino) {
-                                if (byteBuffer[0] != 124) {
-                                    camino.Add(byteBuffer[0]);
-                                }else {
-                                    DentroCamino = false;
-                                }
-                                byteBuffer = reader.ReadBytes(bufferLength);
-                            }
-                            TablaPrefijos.Add(Encoding.UTF8.GetString(camino.ToArray()), letra);
-                        }
-
-                        bufferLength = 1000;
-                        var auxCadena = string.Empty;
-                        var Linea = string.Empty;
-                        while (reader.BaseStream.Position != reader.BaseStream.Length) {
-                            foreach (var item in byteBuffer) {
-                                Linea += GetBinary(Convert.ToString(item)).PadLeft(8, '0');
-                                while (Linea.Length > 0) {
-                                    if (TablaPrefijos.ContainsKey(auxCadena)) {
-                                        writer.Write(TablaPrefijos[auxCadena]);
-                                        auxCadena = string.Empty;
-                                    }else {
-                                        auxCadena += Linea.Substring(0, 1);
-                                        Linea = Linea.Substring(1);
-                                    }
-                                }
-                            }
-                            byteBuffer = reader.ReadBytes(1000);
-                        }
-
-                        if (auxCadena.Length != 0) {
-                            foreach (var item in byteBuffer) {
-                                Linea += GetBinary(Convert.ToString(item)).PadLeft(8, '0');
-                                while (Linea.Length > 0) {
-                                    if (TablaPrefijos.ContainsKey(auxCadena)) {
-                                        writer.Write(TablaPrefijos[auxCadena]);
-                                        auxCadena = string.Empty;
-                                    }else {
-                                        auxCadena += Linea.Substring(0, 1);
-                                        Linea = Linea.Substring(1);
-                                    }
-                                }
-                            }
-                        }
-
-                    }
-                }
-            }
-            return Path.Combine(routeDirectory, "decompress", file.FileName);
+           return  Decompress(file, routeDirectory);
+            
         }
 
 
@@ -221,5 +119,145 @@ namespace HuffmanCompress
             return binario;
         }
 
+        public void Compress(IFormFile file, string routeDirectory) {
+            var dataTable = new Dictionary<byte, double>();
+            var treeList = new List<Node>();
+            double totalCharacters = 0;
+
+            if (!Directory.Exists(Path.Combine(routeDirectory, "compress")))
+            {
+                Directory.CreateDirectory(Path.Combine(routeDirectory, "compress"));
+            }
+
+            using (var reader = new BinaryReader(file.OpenReadStream()))
+            {
+                const int bufferLength = 10000;
+                var byteBuffer = new byte[bufferLength];
+                while (reader.BaseStream.Position != reader.BaseStream.Length)
+                {
+                    byteBuffer = reader.ReadBytes(bufferLength);
+                    foreach (var words in byteBuffer)
+                    {
+                        if (dataTable.ContainsKey(words))
+                        {
+                            dataTable[words]++;
+                        }
+                        else
+                        {
+                            dataTable.Add(words, 1);
+                        }
+                    }
+                }
+
+                foreach (var words in dataTable)
+                {
+                    totalCharacters += words.Value;
+                }
+
+                foreach (var words in dataTable)
+                {
+                    treeList.Add(new Node { character = words.Key, frecuency = words.Value / totalCharacters });
+                }
+                treeList.Sort();
+            }
+
+            InsertElement(treeList, file, routeDirectory);
+        }
+
+        public string Decompress(IFormFile file, string routeDirectory) {
+            var TablaPrefijos = new Dictionary<string, byte>();
+            var Extension = string.Empty;
+
+            if (!Directory.Exists(Path.Combine(routeDirectory, "decompress")))
+            {
+                Directory.CreateDirectory(Path.Combine(routeDirectory, "decompress"));
+            }
+
+            using (var reader = new BinaryReader(file.OpenReadStream()))
+            {
+                using (var streamWriter = new FileStream(Path.Combine(routeDirectory, "decompress", $"{Path.GetFileNameWithoutExtension(file.FileName)}.txt"), FileMode.OpenOrCreate))
+                {
+                    using (var writer = new BinaryWriter(streamWriter))
+                    {
+                        int bufferLength = 10000;
+                        var byteBuffer = new byte[bufferLength];
+                        byteBuffer = reader.ReadBytes(8);
+                        var cantDiccionario = Convert.ToInt32(Encoding.UTF8.GetString(byteBuffer));
+
+                        bufferLength = 1;
+                        byteBuffer = reader.ReadBytes(bufferLength);
+
+                        for (int i = 0; i < cantDiccionario; i++)
+                        {
+                            var camino = new List<byte>();
+                            var letra = byteBuffer[0];
+                            byteBuffer = reader.ReadBytes(bufferLength);
+                            var DentroCamino = true;
+                            while (DentroCamino)
+                            {
+                                if (byteBuffer[0] != 124)
+                                {
+                                    camino.Add(byteBuffer[0]);
+                                }
+                                else
+                                {
+                                    DentroCamino = false;
+                                }
+                                byteBuffer = reader.ReadBytes(bufferLength);
+                            }
+                            TablaPrefijos.Add(Encoding.UTF8.GetString(camino.ToArray()), letra);
+                        }
+
+                        bufferLength = 1000;
+                        var auxCadena = string.Empty;
+                        var Linea = string.Empty;
+                        while (reader.BaseStream.Position != reader.BaseStream.Length)
+                        {
+                            foreach (var item in byteBuffer)
+                            {
+                                Linea += GetBinary(Convert.ToString(item)).PadLeft(8, '0');
+                                while (Linea.Length > 0)
+                                {
+                                    if (TablaPrefijos.ContainsKey(auxCadena))
+                                    {
+                                        writer.Write(TablaPrefijos[auxCadena]);
+                                        auxCadena = string.Empty;
+                                    }
+                                    else
+                                    {
+                                        auxCadena += Linea.Substring(0, 1);
+                                        Linea = Linea.Substring(1);
+                                    }
+                                }
+                            }
+                            byteBuffer = reader.ReadBytes(1000);
+                        }
+
+                        if (auxCadena.Length != 0)
+                        {
+                            foreach (var item in byteBuffer)
+                            {
+                                Linea += GetBinary(Convert.ToString(item)).PadLeft(8, '0');
+                                while (Linea.Length > 0)
+                                {
+                                    if (TablaPrefijos.ContainsKey(auxCadena))
+                                    {
+                                        writer.Write(TablaPrefijos[auxCadena]);
+                                        auxCadena = string.Empty;
+                                    }
+                                    else
+                                    {
+                                        auxCadena += Linea.Substring(0, 1);
+                                        Linea = Linea.Substring(1);
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+            return Path.Combine(routeDirectory, "decompress", file.FileName);
+        }
     }
 }
