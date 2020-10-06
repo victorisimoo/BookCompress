@@ -3,14 +3,17 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Mime;
+using APIHuffman.Models;
 using APIHuffman.System;
 using HuffmanCompress;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.FileProviders;
 
 namespace APIHuffman.Controllers {
-    [Route("api/[controller]")]
+    [Route("api/")]
     [ApiController]
     public class FileCompressController : ControllerBase {
 
@@ -27,7 +30,7 @@ namespace APIHuffman.Controllers {
                 FileController fileController = new FileController();
                 fileController.CompressFile(file, routeDirectory);
                 DataMapping(file);
-                return StatusCode(200, ReturnFile());
+                return returnFile(file);
             }else {
                 return StatusCode(500, "Error with sent file");
             }
@@ -46,23 +49,19 @@ namespace APIHuffman.Controllers {
             
         }
 
-        [HttpGet]
-        public HttpResponseMessage ReturnFile() {
-            var path = Storage.Instance.actualFile.CompressedFilePath;
-            HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
-            var stream = new FileStream(path, FileMode.Open);
-            result.Content = new StreamContent(stream);
-            result.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment");
-            result.Content.Headers.ContentDisposition.FileName = Path.GetFileName(path);
-            result.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-            result.Content.Headers.ContentLength = stream.Length;
-            return result;
+        public ActionResult returnFile(IFormFile file) {
+            return PhysicalFile(Storage.Instance.actualFile.CompressedFilePath, MediaTypeNames.Text.Plain, $"{Path.GetFileNameWithoutExtension(file.FileName)}.huff");
         }
-
+        
         public void DataMapping(IFormFile file) {
             Storage.Instance.actualFile.FileName = Path.GetFileNameWithoutExtension(file.FileName);
             Storage.Instance.actualFile.CompressedFilePath = Path.Combine(
                 routeDirectory, "compress", $"{Path.GetFileNameWithoutExtension(file.FileName)}.huff");
+            Storage.Instance.actualFile.CompressionFactor = (double)(new FileInfo(Storage.Instance.actualFile.CompressedFilePath).Length / (double) file.Length);
+            Storage.Instance.actualFile.CompressionRatio = (double)(file.Length / (double)(new FileInfo(Storage.Instance.actualFile.CompressedFilePath).Length));
+            Storage.Instance.actualFile.ReductionPortentage = (double) ((double)(new FileInfo(Storage.Instance.actualFile.CompressedFilePath).Length) * 100) / (double) file.Length;
+            Storage.Instance.files.Add(Storage.Instance.actualFile);
+            Storage.Instance.actualFile = new FileHistory();
         }
 
         

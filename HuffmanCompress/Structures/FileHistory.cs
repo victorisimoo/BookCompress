@@ -5,9 +5,9 @@ namespace APIHuffman.Models {
 
         public String FileName { get; set; }
         public String CompressedFilePath { get; set; }
-        public int CompressionRatio { get; set; }
-        public int CompressionFactor { get; set; }
-        public int ReductionPortentage { get; set; }
+        public double CompressionRatio { get; set; }
+        public double CompressionFactor { get; set; }
+        public double ReductionPortentage { get; set; }
 
         public FileHistory() { }
 
