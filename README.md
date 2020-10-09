@@ -27,6 +27,11 @@ En ciencia de la computación y teoría de la información, la codificación Huf
 ## Implementación
 Para clonar el proyecto utilice el siguiente enlace: [https://github.com/victorisimoo/BookCompress.git]()
 
+`$ git clone https://github.com/victorisimoo/BookCompress.git `
+
+
 #### Autores
-###### Alejandra Recinos : @Ale180820
-###### Victor Hernández  : @victorisimoo
+
+Alejandra Recinos : @Ale180820
+
+Victor Hernández  : @victorisimoo
