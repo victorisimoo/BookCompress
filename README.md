@@ -30,7 +30,7 @@ Para clonar el proyecto utilice el siguiente enlace: [https://github.com/victori
 `$ git clone https://github.com/victorisimoo/BookCompress.git `
 
 
-#### Autores
+## Autores
 
 Alejandra Recinos : @Ale180820
 
