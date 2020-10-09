@@ -1,5 +1,6 @@
 ﻿using HuffmanCompress.Controller;
 using HuffmanCompress.Interfaces;
+using HuffmanCompress.Structures;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -33,8 +34,8 @@ namespace HuffmanCompress {
             while (nodeList.Count != 1) {
                 var nodeAux = new Node();
                 nodeAux.frecuency = nodeList[0].frecuency + nodeList[1].frecuency;
-                nodeAux.nodeLeft = nodeList[1];
-                nodeAux.nodeRight = nodeList[0];
+                nodeAux.left = nodeList[1];
+                nodeAux.right = nodeList[0];
 
                 nodeList.RemoveRange(0, 2);
                 nodeList.Add(nodeAux);
@@ -57,12 +58,12 @@ namespace HuffmanCompress {
                 var caminoDer = $"{ road }1";
                 var caminoIzq = $"{road}0";
 
-                TravelFile(ref prefixDictionary, root.nodeRight, caminoDer);
+                TravelFile(ref prefixDictionary, root.right, caminoDer);
 
                 if (root.character != 0) {
                     prefixDictionary.Add(root.character, road);
                 }
-                TravelFile(ref prefixDictionary, root.nodeLeft, caminoIzq);
+                TravelFile(ref prefixDictionary, root.left, caminoIzq);
             }
         }
 
@@ -128,30 +129,6 @@ namespace HuffmanCompress {
         }
 
         /// <summary>
-        /// Method for returning a binary element
-        /// </summary>
-        /// <param name="element"> sPart of the object to be converted </param>
-        /// <returns> Converted element return </returns>
-        private static string GetBinary (string element) {
-            var numero = Convert.ToInt32(element);
-            var aux = "";
-            var binario = "";
-
-            while(numero >= 2) {
-                aux = aux + (numero % 2).ToString();
-                numero = numero / 2;
-            }
-
-            aux = aux + numero.ToString();
-
-            for (int i = aux.Length; i >= 1; i += -1) {
-                binario = binario + aux.Substring(i - 1, 1);
-            }
-
-            return binario;
-        }
-
-        /// <summary>
         /// Method for compressing the file
         /// </summary>
         /// <param name="file"> File sent (.txt) </param>
@@ -208,6 +185,7 @@ namespace HuffmanCompress {
         /// <param name="routeDirectory"> Current directory path </param>
         /// <returns></returns>
         public string Decompress(IFormFile file, string routeDirectory) {
+            Converter convert = new Converter();
             var dataTable = new Dictionary<string, byte>();
             var ext = string.Empty;
 
@@ -251,7 +229,7 @@ namespace HuffmanCompress {
                        
                         while (reader.BaseStream.Position != reader.BaseStream.Length) {
                             foreach (var item in byteBuffer) {
-                                line += GetBinary(Convert.ToString(item)).PadLeft(8, '0');
+                                line += convert.GetBinary(Convert.ToString(item)).PadLeft(8, '0');
                                 while (line.Length > 0) {
                                     if (dataTable.ContainsKey(auxCadena)) {
                                         writer.Write(dataTable[auxCadena]);
@@ -268,7 +246,7 @@ namespace HuffmanCompress {
 
                         if (auxCadena.Length != 0) {
                             foreach (var item in byteBuffer) {
-                                line += GetBinary(Convert.ToString(item)).PadLeft(8, '0');
+                                line += convert.GetBinary(Convert.ToString(item)).PadLeft(8, '0');
                                 while (line.Length > 0) {
                                     if (dataTable.ContainsKey(auxCadena)) {
                                         writer.Write(dataTable[auxCadena]);

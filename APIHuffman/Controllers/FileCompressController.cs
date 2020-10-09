@@ -47,7 +47,6 @@ namespace APIHuffman.Controllers {
             }else {
                 return StatusCode(500, "InternalServerError");
             }
-
         }
 
         /// <summary>
