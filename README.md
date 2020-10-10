@@ -1,5 +1,6 @@
 # BookCompress
 Proyecto para el curso de **Estructura de Datos II**, en el cual se implementa el algoritmo de compresión de **Huffman**.
+Como parte del compromiso con el proyecto y el curso, se elaboraron dos soluciones, se adjunta en el link, la solución alternativa.  ([CompressionApp](https://github.com/Ale180820/CompressionApp))
 
 ## Codificación de Huffman ([Wikipedia](https://es.wikipedia.org/wiki/Codificaci%C3%B3n_Huffman))
 En ciencia de la computación y teoría de la información, la codificación Huffman es un algoritmo usado para compresión de datos.
